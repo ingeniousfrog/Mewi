@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Mewi reads Finder desktop item positions so the cat can explore folders and images on your desktop.</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>Mewi listens for typing and mouse clicks so the cat can mirror your keyboard and drum along.</string>
+</dict>
+</plist>

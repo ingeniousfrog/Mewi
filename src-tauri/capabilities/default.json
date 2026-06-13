@@ -9,6 +9,8 @@
     "core:window:allow-cursor-position",
     "core:window:allow-outer-position",
     "core:window:allow-set-position",
+    "core:window:allow-set-size",
+    "core:window:allow-set-ignore-cursor-events",
     "core:event:allow-listen"
   ]
 }

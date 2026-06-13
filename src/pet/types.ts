@@ -1,6 +1,6 @@
-export type PetState = "idle" | "walk" | "run" | "sleep" | "stretch" | "look" | "drag";
+export type PetState = "idle" | "walk" | "run" | "sleep" | "stretch" | "look" | "drag" | "petHead" | "explore" | "perform";
 
-export type CursorMode = "default" | "teaser";
+export type CursorMode = "default" | "teaser" | "pet";
 
 export type CatBreed = "blue-longhair" | "garfield" | "british-shorthair";
 
@@ -23,7 +23,11 @@ export type VisualAction =
   | "fake-push"
   | "terminal-rest"
   | "pounce"
-  | "swat";
+  | "swat"
+  | "hop"
+  | "head-rub"
+  | "mirror-type"
+  | "mirror-drum";
 
 export type ToyIntensity = "none" | "tease" | "excited";
 
@@ -65,4 +69,8 @@ export type PetFrame = PetMotion &
     toyPoint: Point | null;
     toyIntensity: ToyIntensity;
     walkTarget: Point | null;
+    exploreTargetId: string | null;
+    exploreActionUntilMs: number | null;
+    petHeadUntilMs: number | null;
+    performUntilMs: number | null;
   }>;

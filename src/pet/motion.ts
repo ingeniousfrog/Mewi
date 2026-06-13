@@ -1,5 +1,4 @@
 import {
-  MOUSE_REACTION_RADIUS,
   SLEEP_AFTER_MS,
   STRETCH_AFTER_MS,
   WALK_SPEED,
@@ -25,7 +24,7 @@ export function isMouseNearby(mouse: Point | null, petCenter: Point): boolean {
     return false;
   }
 
-  return distanceBetween(mouse, petCenter) <= MOUSE_REACTION_RADIUS;
+  return distanceBetween(mouse, petCenter) <= 88;
 }
 
 export function moveToward(position: Point, target: Point, step: number, localAnchor: Point): Point {
