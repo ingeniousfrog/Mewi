@@ -6,6 +6,10 @@ import {
 } from "./constants";
 import type { PetActivity, PetMotion, PetState, Point, Rect, Size, Velocity } from "./types";
 
+export function distanceBetween(a: Point, b: Point): number {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
 export function clampPointToBounds(point: Point, bounds: Rect, size: Size): Point {
   const maxX = bounds.x + Math.max(0, bounds.width - size.width);
   const maxY = bounds.y + Math.max(0, bounds.height - size.height);
@@ -21,9 +25,22 @@ export function isMouseNearby(mouse: Point | null, petCenter: Point): boolean {
     return false;
   }
 
-  const dx = mouse.x - petCenter.x;
-  const dy = mouse.y - petCenter.y;
-  return Math.hypot(dx, dy) <= MOUSE_REACTION_RADIUS;
+  return distanceBetween(mouse, petCenter) <= MOUSE_REACTION_RADIUS;
+}
+
+export function moveToward(position: Point, target: Point, step: number, localAnchor: Point): Point {
+  const anchor = {
+    x: position.x + localAnchor.x,
+    y: position.y + localAnchor.y,
+  };
+  const dx = target.x - anchor.x;
+  const dy = target.y - anchor.y;
+  const distance = Math.max(1, Math.hypot(dx, dy));
+
+  return {
+    x: position.x + (dx / distance) * step,
+    y: position.y + (dy / distance) * step,
+  };
 }
 
 export function choosePetState(activity: PetActivity): PetState {

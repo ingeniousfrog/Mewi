@@ -1,24 +1,34 @@
-import type { PetState } from "./types";
+import type { CSSProperties } from "react";
+import type { CatBreed, CursorMode, PetState, Point, VisualAction } from "./types";
 
 type CatSpriteProps = Readonly<{
+  breed: CatBreed;
   state: PetState;
   facing: "left" | "right";
-  nearbyMouse: boolean;
+  cursorMode: CursorMode;
+  eyeOffset: Point;
+  visualAction: VisualAction;
 }>;
 
-export function CatSprite({ state, facing, nearbyMouse }: CatSpriteProps) {
-  const className = `catSprite catSprite-${state} catSprite-${facing}`;
+export function CatSprite({ breed, state, facing, cursorMode, eyeOffset, visualAction }: CatSpriteProps) {
+  const className = `catSprite catSprite-${state} catSprite-${facing} catBreed-${breed}`;
+  const eyeStyle = {
+    "--eye-x": `${eyeOffset.x}px`,
+    "--eye-y": `${eyeOffset.y}px`,
+  } as CSSProperties;
 
   return (
-    <div className={className} aria-label={`Mewi is ${state}`}>
+    <div className={className} data-cursor-mode={cursorMode} data-visual-action={visualAction} aria-label={`Mewi is ${state}`}>
       <svg className="catSvg" viewBox="0 0 180 180" role="img" aria-hidden="true">
         <ellipse className="catShadow" cx="91" cy="150" rx="55" ry="13" />
         <path className="catTail" d="M132 111 C164 92 156 55 132 66 C118 72 122 90 137 84" />
+        <path className="catFur catFur-left" d="M57 88 C45 98 44 112 54 122" />
+        <path className="catFur catFur-right" d="M130 88 C142 98 142 112 132 122" />
         <path className="catBody" d="M52 95 C52 70 70 51 94 51 C123 51 142 73 140 104 L137 133 C135 146 124 154 91 154 C60 154 47 145 47 128 Z" />
         <path className="catHead" d="M48 75 L56 38 L78 57 C88 53 99 53 110 57 L133 38 L139 75 C148 91 144 116 128 128 C112 139 73 139 57 128 C40 115 39 91 48 75 Z" />
         <path className="catInnerEar" d="M59 63 L62 50 L71 61 Z" />
         <path className="catInnerEar" d="M126 63 L124 50 L115 61 Z" />
-        <g className="catFace">
+        <g className="catFace" style={eyeStyle}>
           <ellipse className="catEye catEye-left" cx="75" cy="91" rx="7" ry={state === "sleep" ? "1.5" : "8"} />
           <ellipse className="catEye catEye-right" cx="113" cy="91" rx="7" ry={state === "sleep" ? "1.5" : "8"} />
           <path className="catNose" d="M90 102 L96 102 L93 107 Z" />
@@ -27,8 +37,31 @@ export function CatSprite({ state, facing, nearbyMouse }: CatSpriteProps) {
         </g>
         <path className="catPaw catPaw-left" d="M65 137 C65 148 80 148 81 137" />
         <path className="catPaw catPaw-right" d="M106 137 C106 148 121 148 122 137" />
-        {nearbyMouse ? <circle className="catSpark" cx="128" cy="70" r="5" /> : null}
+        {cursorMode === "teaser" ? <circle className="catSpark" cx="128" cy="70" r="5" /> : null}
+        {state === "sleep" ? (
+          <g className="catZzz">
+            <text x="128" y="48">Z</text>
+            <text x="143" y="33">z</text>
+            <text x="154" y="22">z</text>
+          </g>
+        ) : null}
+        {visualAction !== "none" ? <text className="catActionGlyph" x="24" y="40">{actionGlyph(visualAction)}</text> : null}
       </svg>
     </div>
   );
+}
+
+function actionGlyph(action: VisualAction): string {
+  const glyphByAction: Record<VisualAction, string> = {
+    none: "",
+    sniff: "~",
+    step: "*",
+    sit: "v",
+    rub: "+",
+    "nap-corner": "z",
+    "fake-push": ">",
+    "terminal-rest": "_",
+  };
+
+  return glyphByAction[action];
 }

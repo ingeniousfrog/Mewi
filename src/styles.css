@@ -8,8 +8,8 @@
 html,
 body,
 #root {
-  width: 180px;
-  height: 180px;
+  width: 520px;
+  height: 520px;
   margin: 0;
   overflow: hidden;
   background: transparent;
@@ -25,18 +25,18 @@ button {
 
 .petStage {
   display: grid;
-  width: 180px;
-  height: 180px;
+  width: 520px;
+  height: 520px;
   place-items: center;
   background: transparent;
 }
 
 .petHitArea {
-  width: 168px;
-  height: 168px;
+  width: 180px;
+  height: 180px;
   padding: 0;
   border: 0;
-  cursor: grab;
+  cursor: inherit;
   background: transparent;
   touch-action: none;
 }
@@ -45,11 +45,24 @@ button {
   cursor: grabbing;
 }
 
+.petStage-cursor-teaser {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M7 36 L33 10' stroke='%232a2724' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M31 8 C39 5 42 13 36 18 C31 22 28 14 31 8Z' fill='%23ef6f87' stroke='%232a2724' stroke-width='2'/%3E%3Ccircle cx='8' cy='36' r='4' fill='%235cc8ff' stroke='%232a2724' stroke-width='2'/%3E%3C/svg%3E") 8 36, auto;
+}
+
+.petStage-cursor-default {
+  cursor: default;
+}
+
 .catSprite {
   width: 168px;
   height: 168px;
   transform-origin: 50% 88%;
   filter: drop-shadow(0 10px 14px rgb(27 31 35 / 18%));
+  --cat-fur: #f8c86f;
+  --cat-stroke: #2a2724;
+  --cat-ear: #ef8f88;
+  --cat-eye: #24211f;
+  --cat-nose: #dd6d6f;
 }
 
 .catSprite-left {
@@ -62,6 +75,10 @@ button {
 
 .catSprite-walk {
   animation: mewi-walk 0.72s ease-in-out infinite;
+}
+
+.catSprite-run {
+  animation: mewi-run 0.36s ease-in-out infinite;
 }
 
 .catSprite-sleep {
@@ -91,10 +108,11 @@ button {
 }
 
 .catTail,
+.catFur,
 .catBody,
 .catHead {
-  fill: #f8c86f;
-  stroke: #2a2724;
+  fill: var(--cat-fur);
+  stroke: var(--cat-stroke);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 5;
@@ -107,27 +125,34 @@ button {
   animation: mewi-tail 2.2s ease-in-out infinite;
 }
 
+.catFur {
+  fill: none;
+  stroke-width: 3;
+  opacity: 0.55;
+}
+
 .catInnerEar {
-  fill: #ef8f88;
-  stroke: #2a2724;
+  fill: var(--cat-ear);
+  stroke: var(--cat-stroke);
   stroke-linejoin: round;
   stroke-width: 3;
 }
 
 .catEye {
-  fill: #24211f;
+  fill: var(--cat-eye);
   transform-origin: center;
+  translate: var(--eye-x, 0) var(--eye-y, 0);
 }
 
 .catNose {
-  fill: #dd6d6f;
+  fill: var(--cat-nose);
 }
 
 .catMouth,
 .catWhiskers,
 .catPaw {
   fill: none;
-  stroke: #2a2724;
+  stroke: var(--cat-stroke);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 4;
@@ -140,6 +165,56 @@ button {
 .catSpark {
   fill: #5cc8ff;
   animation: mewi-spark 0.7s ease-in-out infinite;
+}
+
+.catZzz {
+  fill: #4d6474;
+  font-family: Georgia, serif;
+  font-weight: 800;
+  opacity: 0.8;
+  animation: mewi-zzz 1.8s ease-in-out infinite;
+}
+
+.catActionGlyph {
+  fill: #2a2724;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 800;
+  opacity: 0.65;
+  animation: mewi-action 0.9s ease-in-out infinite;
+}
+
+.catBreed-blue-longhair {
+  --cat-fur: #9fb0bc;
+  --cat-ear: #d4a6a8;
+  --cat-eye: #22343f;
+}
+
+.catBreed-blue-longhair .catFur {
+  stroke-width: 5;
+  opacity: 0.72;
+}
+
+.catBreed-garfield {
+  --cat-fur: #e99145;
+  --cat-ear: #f0ad8e;
+  --cat-eye: #1f1b18;
+}
+
+.catBreed-garfield .catHead {
+  transform: scaleX(1.08);
+  transform-origin: 93px 92px;
+}
+
+.catBreed-british-shorthair {
+  --cat-fur: #b9a083;
+  --cat-ear: #e5aaa1;
+  --cat-eye: #2f3c2c;
+}
+
+.catBreed-british-shorthair .catBody {
+  transform: scaleX(1.05);
+  transform-origin: 92px 112px;
 }
 
 @keyframes mewi-breathe {
@@ -165,6 +240,21 @@ button {
   50% {
     translate: 3px -3px;
     rotate: 1.5deg;
+  }
+}
+
+@keyframes mewi-run {
+  0%,
+  100% {
+    translate: -7px -1px;
+    rotate: -5deg;
+    scale: 1.08 0.94;
+  }
+
+  50% {
+    translate: 7px -5px;
+    rotate: 5deg;
+    scale: 1.12 0.9;
   }
 }
 
@@ -239,5 +329,29 @@ button {
   50% {
     opacity: 1;
     scale: 1.18;
+  }
+}
+
+@keyframes mewi-zzz {
+  0%,
+  100% {
+    opacity: 0.35;
+    translate: 0 4px;
+  }
+
+  50% {
+    opacity: 0.95;
+    translate: 0 -2px;
+  }
+}
+
+@keyframes mewi-action {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -5px;
   }
 }

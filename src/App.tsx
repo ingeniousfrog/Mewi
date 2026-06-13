@@ -4,20 +4,23 @@ import "./styles.css";
 
 export function App() {
   const pet = usePetController();
+  const stageClassName = `petStage petStage-cursor-${pet.cursorMode}`;
 
   return (
     <main
-      className="petStage"
+      className={stageClassName}
       data-state={pet.state}
+      data-visual-action={pet.visualAction}
       onPointerMove={(event) => {
-        pet.setMousePoint({ x: event.clientX, y: event.clientY });
+        pet.markInteraction();
         if (pet.dragging) {
           void pet.moveDrag({ x: event.screenX, y: event.screenY });
         }
       }}
-      onPointerLeave={() => pet.setMousePoint(null)}
       onPointerUp={(event) => {
-        event.currentTarget.releasePointerCapture(event.pointerId);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
         pet.endDrag();
       }}
       onPointerCancel={pet.endDrag}
@@ -34,7 +37,14 @@ export function App() {
           void pet.startDrag({ x: event.screenX, y: event.screenY });
         }}
       >
-        <CatSprite state={pet.state} facing={pet.facing} nearbyMouse={pet.nearbyMouse} />
+        <CatSprite
+          breed={pet.breed}
+          state={pet.state}
+          facing={pet.facing}
+          cursorMode={pet.cursorMode}
+          eyeOffset={pet.eyeOffset}
+          visualAction={pet.visualAction}
+        />
       </button>
     </main>
   );

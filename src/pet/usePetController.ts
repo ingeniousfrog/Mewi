@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createDesktopWindowClient } from "../desktop/windowClient";
 import { PET_WINDOW_SIZE, WALK_SPEED } from "./constants";
-import { choosePetState, clampPointToBounds, isMouseNearby, nextWalkMotion, shouldAutoWalk } from "./motion";
-import type { PetMotion, PetState, Point, Rect } from "./types";
+import { clampPointToBounds } from "./motion";
+import { createInitialPetFrame, nextPetFrame } from "./stateMachine";
+import type { CatBreed, DesktopObject, PetFrame, PetState, Point, Rect, VisualAction } from "./types";
 
 const TICK_MS = 120;
-const WALK_EVERY_TICK = 4;
-const DEFAULT_BOUNDS: Rect = { x: 0, y: 0, width: 800, height: 600 };
-const INITIAL_MOTION: PetMotion = {
-  position: { x: 96, y: 96 },
-  velocity: { x: WALK_SPEED, y: 0 },
-  facing: "right",
-};
+const DESKTOP_SCAN_MS = 2000;
+const DEFAULT_BREED: CatBreed = "blue-longhair";
+const INITIAL_POSITION: Point = { x: 96, y: 96 };
 
 type DragSnapshot = Readonly<{
   offset: Point;
@@ -21,26 +18,37 @@ type DragSnapshot = Readonly<{
 export type PetController = Readonly<{
   state: PetState;
   facing: "left" | "right";
-  nearbyMouse: boolean;
+  cursorMode: PetFrame["cursorMode"];
+  eyeOffset: Point;
+  visualAction: VisualAction;
+  breed: CatBreed;
   dragging: boolean;
   reset: () => Promise<void>;
-  setMousePoint: (point: Point | null) => void;
   startDrag: (pointer: Point) => Promise<void>;
   moveDrag: (pointer: Point) => Promise<void>;
   endDrag: () => void;
+  markInteraction: () => void;
 }>;
 
 export function usePetController(): PetController {
   const client = useMemo(() => createDesktopWindowClient(), []);
-  const [motion, setMotion] = useState<PetMotion>(INITIAL_MOTION);
-  const [state, setState] = useState<PetState>("idle");
-  const [nearbyMouse, setNearbyMouse] = useState(false);
+  const [frame, setFrame] = useState<PetFrame>(() => createInitialPetFrame(INITIAL_POSITION));
   const [dragging, setDragging] = useState(false);
-  const stateRef = useRef<PetState>("idle");
-  const idleMsRef = useRef(0);
-  const tickRef = useRef(0);
+  const draggingRef = useRef(false);
+  const frameRef = useRef<PetFrame>(frame);
+  const lastInteractionAtMsRef = useRef(Date.now());
   const dragSnapshotRef = useRef<DragSnapshot | null>(null);
-  const mousePointRef = useRef<Point | null>(null);
+  const desktopObjectsRef = useRef<readonly DesktopObject[]>([]);
+  const forceStateChangeRef = useRef(false);
+
+  const setFrameValue = useCallback((nextFrame: PetFrame) => {
+    frameRef.current = nextFrame;
+    setFrame(nextFrame);
+  }, []);
+
+  const markInteraction = useCallback(() => {
+    lastInteractionAtMsRef.current = Date.now();
+  }, []);
 
   const reset = useCallback(async () => {
     const bounds = await client.getBounds();
@@ -52,22 +60,16 @@ export function usePetController(): PetController {
       bounds,
       PET_WINDOW_SIZE,
     );
+    const nextFrame = createInitialPetFrame(position, Date.now());
 
     await client.setPosition(position);
-    setMotion({ ...INITIAL_MOTION, position });
-    stateRef.current = "idle";
-    setState("idle");
-    setNearbyMouse(false);
+    setFrameValue(nextFrame);
     setDragging(false);
-    idleMsRef.current = 0;
-    tickRef.current = 0;
+    draggingRef.current = false;
+    lastInteractionAtMsRef.current = Date.now();
     dragSnapshotRef.current = null;
-    mousePointRef.current = null;
-  }, [client]);
-
-  const setMousePoint = useCallback((point: Point | null) => {
-    mousePointRef.current = point;
-  }, []);
+    forceStateChangeRef.current = false;
+  }, [client, setFrameValue]);
 
   const startDrag = useCallback(
     async (pointer: Point) => {
@@ -79,11 +81,18 @@ export function usePetController(): PetController {
         },
         bounds,
       };
+      draggingRef.current = true;
       setDragging(true);
-      stateRef.current = "drag";
-      setState("drag");
+      markInteraction();
+      setFrameValue({
+        ...frameRef.current,
+        state: "drag",
+        cursorMode: "default",
+        visualAction: "none",
+        velocity: { x: WALK_SPEED, y: 0 },
+      });
     },
-    [client],
+    [client, markInteraction, setFrameValue],
   );
 
   const moveDrag = useCallback(
@@ -102,22 +111,34 @@ export function usePetController(): PetController {
         snapshot.bounds,
         PET_WINDOW_SIZE,
       );
+      const nextFrame = {
+        ...frameRef.current,
+        state: "drag" as const,
+        position,
+        cursorMode: "default" as const,
+        visualAction: "none" as const,
+      };
 
       await client.setPosition(position);
-      setMotion((current) => ({
-        ...current,
-        position,
-        velocity: { ...current.velocity },
-      }));
+      setFrameValue(nextFrame);
+      markInteraction();
     },
-    [client],
+    [client, markInteraction, setFrameValue],
   );
 
   const endDrag = useCallback(() => {
     dragSnapshotRef.current = null;
+    draggingRef.current = false;
     setDragging(false);
-    idleMsRef.current = 0;
-  }, []);
+    markInteraction();
+    setFrameValue({
+      ...frameRef.current,
+      state: "idle",
+      cursorMode: "default",
+      visualAction: "none",
+      nextRandomAtMs: Date.now() + 3000,
+    });
+  }, [markInteraction, setFrameValue]);
 
   useEffect(() => {
     let removeResetListener: (() => void) | null = null;
@@ -145,51 +166,101 @@ export function usePetController(): PetController {
   }, [client, reset]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      const petCenter = {
-        x: PET_WINDOW_SIZE.width / 2,
-        y: PET_WINDOW_SIZE.height / 2,
-      };
-      const nextNearbyMouse = isMouseNearby(mousePointRef.current, petCenter);
-
-      setNearbyMouse(nextNearbyMouse);
-      idleMsRef.current = nextNearbyMouse || dragging ? 0 : idleMsRef.current + TICK_MS;
-      tickRef.current += 1;
-
-      const nextState = choosePetState({
-        state: tickRef.current % WALK_EVERY_TICK === 0 && stateRef.current === "idle" ? "walk" : stateRef.current,
-        idleMs: idleMsRef.current,
-        nearbyMouse: nextNearbyMouse,
-        dragging,
+    const scan = () => {
+      client.scanDesktopEnvironment().then((objects) => {
+        desktopObjectsRef.current = objects;
+      }).catch((error: unknown) => {
+        desktopObjectsRef.current = [];
+        console.error("Unable to scan desktop environment", error);
       });
-      stateRef.current = nextState;
-      setState(nextState);
+    };
+    const interval = window.setInterval(scan, DESKTOP_SCAN_MS);
 
-      if (!dragging && shouldAutoWalk(nextState) && tickRef.current % WALK_EVERY_TICK === 0) {
-        client.getBounds().then((bounds) => {
-          setMotion((current) => {
-            const nextMotion = nextWalkMotion(current, bounds, PET_WINDOW_SIZE);
-            void client.setPosition(nextMotion.position);
-            return nextMotion;
-          });
-        }).catch((error: unknown) => {
-          console.error("Unable to update Mewi position", error);
-        });
-      }
-    }, TICK_MS);
+    scan();
 
     return () => window.clearInterval(interval);
-  }, [client, dragging]);
+  }, [client]);
+
+  useEffect(() => {
+    const triggerStateChange = () => {
+      forceStateChangeRef.current = true;
+      markInteraction();
+    };
+
+    document.addEventListener("visibilitychange", triggerStateChange);
+    window.addEventListener("focus", triggerStateChange);
+    window.addEventListener("blur", triggerStateChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", triggerStateChange);
+      window.removeEventListener("focus", triggerStateChange);
+      window.removeEventListener("blur", triggerStateChange);
+    };
+  }, [markInteraction]);
+
+  useEffect(() => {
+    let active = true;
+    const interval = window.setInterval(() => {
+      const nowMs = Date.now();
+
+      Promise.all([client.getBounds(), client.getCursorPosition()]).then(([bounds, mouseGlobal]) => {
+        if (!active) {
+          return;
+        }
+
+        const nextFrame = nextPetFrame({
+          frame: frameRef.current,
+          bounds,
+          windowSize: PET_WINDOW_SIZE,
+          mouseGlobal,
+          dragging: draggingRef.current,
+          nowMs,
+          lastInteractionAtMs: lastInteractionAtMsRef.current,
+          desktopObjects: desktopObjectsRef.current,
+          randomValue: Math.random(),
+          forceStateChange: forceStateChangeRef.current,
+        });
+        forceStateChangeRef.current = false;
+
+        if (
+          nextFrame.position.x !== frameRef.current.position.x ||
+          nextFrame.position.y !== frameRef.current.position.y
+        ) {
+          void client.setPosition(nextFrame.position);
+        }
+
+        if (mouseGlobal) {
+          const mouseMovedNearCat = nextFrame.cursorMode === "teaser" || nextFrame.state === "run" || nextFrame.state === "look";
+
+          if (mouseMovedNearCat) {
+            lastInteractionAtMsRef.current = nowMs;
+          }
+        }
+
+        setFrameValue(nextFrame);
+      }).catch((error: unknown) => {
+        console.error("Unable to update Mewi frame", error);
+      });
+    }, TICK_MS);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [client, setFrameValue]);
 
   return {
-    state,
-    facing: motion.facing,
-    nearbyMouse,
+    state: frame.state,
+    facing: frame.facing,
+    cursorMode: frame.cursorMode,
+    eyeOffset: frame.eyeOffset,
+    visualAction: frame.visualAction,
+    breed: DEFAULT_BREED,
     dragging,
     reset,
-    setMousePoint,
     startDrag,
     moveDrag,
     endDrag,
+    markInteraction,
   };
 }
