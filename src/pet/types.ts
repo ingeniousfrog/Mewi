@@ -21,7 +21,11 @@ export type VisualAction =
   | "rub"
   | "nap-corner"
   | "fake-push"
-  | "terminal-rest";
+  | "terminal-rest"
+  | "pounce"
+  | "swat";
+
+export type ToyIntensity = "none" | "tease" | "excited";
 
 export type Point = Readonly<{
   x: number;
@@ -58,4 +62,7 @@ export type PetFrame = PetMotion &
     nextRandomAtMs: number;
     lastNearMouseAtMs: number | null;
     eyeOffset: Point;
+    toyPoint: Point | null;
+    toyIntensity: ToyIntensity;
+    walkTarget: Point | null;
   }>;

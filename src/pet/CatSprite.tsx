@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { CatBreed, CursorMode, PetState, Point, VisualAction } from "./types";
+import type { CatBreed, CursorMode, PetState, Point, ToyIntensity, VisualAction } from "./types";
 
 type CatSpriteProps = Readonly<{
   breed: CatBreed;
@@ -8,10 +8,11 @@ type CatSpriteProps = Readonly<{
   cursorMode: CursorMode;
   eyeOffset: Point;
   visualAction: VisualAction;
+  toyIntensity: ToyIntensity;
 }>;
 
-export function CatSprite({ breed, state, facing, cursorMode, eyeOffset, visualAction }: CatSpriteProps) {
-  const className = `catSprite catSprite-${state} catSprite-${facing} catBreed-${breed}`;
+export function CatSprite({ breed, state, facing, cursorMode, eyeOffset, visualAction, toyIntensity }: CatSpriteProps) {
+  const className = `catSprite catSprite-${state} catSprite-${facing} catSprite-toy-${toyIntensity} catBreed-${breed}`;
   const eyeStyle = {
     "--eye-x": `${eyeOffset.x}px`,
     "--eye-y": `${eyeOffset.y}px`,
@@ -61,6 +62,8 @@ function actionGlyph(action: VisualAction): string {
     "nap-corner": "z",
     "fake-push": ">",
     "terminal-rest": "_",
+    pounce: "!",
+    swat: "/",
   };
 
   return glyphByAction[action];

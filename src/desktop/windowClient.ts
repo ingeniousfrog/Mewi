@@ -11,6 +11,9 @@ export type DesktopWindowClient = Readonly<{
   getCursorPosition: () => Promise<Point | null>;
   scanDesktopEnvironment: () => Promise<readonly DesktopObject[]>;
   onReset: (handler: () => void) => Promise<() => void>;
+  onBringBack: (handler: () => void) => Promise<() => void>;
+  onBreedChange: (handler: (breed: unknown) => void) => Promise<() => void>;
+  setTrayBreed: (breed: string) => Promise<void>;
 }>;
 
 const fallbackBounds = (): Rect => ({
@@ -27,6 +30,9 @@ const fallbackClient: DesktopWindowClient = {
   getCursorPosition: async () => null,
   scanDesktopEnvironment: async () => [],
   onReset: async () => () => undefined,
+  onBringBack: async () => () => undefined,
+  onBreedChange: async () => () => undefined,
+  setTrayBreed: async () => undefined,
 };
 
 export function createDesktopWindowClient(): DesktopWindowClient {
@@ -69,6 +75,17 @@ export function createDesktopWindowClient(): DesktopWindowClient {
     onReset: async (handler) => {
       const unlisten = await listen("mewi-reset", handler);
       return unlisten;
+    },
+    onBringBack: async (handler) => {
+      const unlisten = await listen("mewi-bring-back", handler);
+      return unlisten;
+    },
+    onBreedChange: async (handler) => {
+      const unlisten = await listen("mewi-breed-change", (event) => handler(event.payload));
+      return unlisten;
+    },
+    setTrayBreed: async (breed) => {
+      await invoke("set_tray_breed", { breed });
     },
   };
 }

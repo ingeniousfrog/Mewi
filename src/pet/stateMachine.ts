@@ -1,8 +1,10 @@
 import {
   CAT_CENTER_IN_WINDOW,
+  EXCITED_MOUSE_SPEED,
   LOOK_RADIUS,
   RANDOM_STATE_MAX_MS,
   RANDOM_STATE_MIN_MS,
+  ROAM_SPEED,
   RUN_RADIUS,
   RUN_STEP,
   SLEEP_AFTER_MS,
@@ -29,6 +31,7 @@ export type PetFrameInput = Readonly<{
   bounds: Rect;
   windowSize: Size;
   mouseGlobal: Point | null;
+  previousMouseGlobal?: Point | null;
   dragging: boolean;
   nowMs: number;
   lastInteractionAtMs: number;
@@ -48,6 +51,9 @@ export function createInitialPetFrame(position: Point, nowMs = 0): PetFrame {
     nextRandomAtMs: nowMs + RANDOM_STATE_MIN_MS,
     lastNearMouseAtMs: null,
     eyeOffset: { x: 0, y: 0 },
+    toyPoint: null,
+    toyIntensity: "none",
+    walkTarget: null,
   };
 }
 
@@ -111,10 +117,16 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
   const catCenter = getCatGlobalCenter(input.frame.position);
   const distanceToMouse = input.mouseGlobal ? distanceBetween(input.mouseGlobal, catCenter) : null;
   const mouseIsNear = distanceToMouse !== null && distanceToMouse <= LOOK_RADIUS;
+  const mouseSpeed = input.mouseGlobal && input.previousMouseGlobal
+    ? distanceBetween(input.mouseGlobal, input.previousMouseGlobal)
+    : 0;
+  const mouseIsExciting = (distanceToMouse !== null && distanceToMouse <= RUN_RADIUS) || mouseSpeed >= EXCITED_MOUSE_SPEED;
   const nextLastNearMouseAtMs = mouseIsNear ? input.nowMs : input.frame.lastNearMouseAtMs;
   const cursorMode = input.dragging
     ? "default"
     : resolveCursorMode(distanceToMouse, nextLastNearMouseAtMs, input.nowMs);
+  const toyPoint = input.mouseGlobal && mouseIsNear ? localToyPoint(input.mouseGlobal, input.frame.position) : null;
+  const toyIntensity = toyPoint ? (mouseIsExciting ? "excited" : "tease") : "none";
 
   if (input.dragging) {
     return {
@@ -124,6 +136,9 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       visualAction: "none",
       lastNearMouseAtMs: nextLastNearMouseAtMs,
       eyeOffset: { x: 0, y: 0 },
+      toyPoint: null,
+      toyIntensity: "none",
+      walkTarget: null,
     };
   }
 
@@ -145,9 +160,12 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       velocity,
       facing: velocity.x < 0 ? "left" : "right",
       cursorMode,
-      visualAction: "none",
+      visualAction: chooseToyAction(input.randomValue),
       lastNearMouseAtMs: nextLastNearMouseAtMs,
       eyeOffset: eyeOffsetForMouse(input.mouseGlobal, getCatGlobalCenter(position)),
+      toyPoint: localToyPoint(input.mouseGlobal, position),
+      toyIntensity: "excited",
+      walkTarget: null,
     };
   }
 
@@ -156,9 +174,12 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       ...input.frame,
       state: "look",
       cursorMode,
-      visualAction: "none",
+      visualAction: mouseIsExciting ? chooseToyAction(input.randomValue) : "none",
       lastNearMouseAtMs: nextLastNearMouseAtMs,
       eyeOffset: eyeOffsetForMouse(input.mouseGlobal, catCenter),
+      toyPoint,
+      toyIntensity,
+      walkTarget: null,
     };
   }
 
@@ -170,6 +191,9 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       visualAction: "none",
       lastNearMouseAtMs: nextLastNearMouseAtMs,
       eyeOffset: { x: 0, y: 0 },
+      toyPoint: null,
+      toyIntensity: "none",
+      walkTarget: null,
     };
   }
 
@@ -185,7 +209,12 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
           ? chooseRandomState(input.randomValue)
           : input.frame.state;
   const nextRandomAtMs = shouldRandomize ? input.nowMs + nextRandomDelayMs(input.randomValue) : input.frame.nextRandomAtMs;
-  const motion = nextState === "walk" ? nextWalkFrame(input.frame, input.bounds, input.windowSize) : input.frame;
+  const motion = nextState === "walk" ? nextWalkFrame(input.frame, input.bounds, input.windowSize, input.randomValue) : {
+    position: input.frame.position,
+    velocity: input.frame.velocity,
+    facing: input.frame.facing,
+    walkTarget: null,
+  };
 
   return {
     ...input.frame,
@@ -196,30 +225,45 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
     nextRandomAtMs,
     lastNearMouseAtMs: nextLastNearMouseAtMs,
     eyeOffset: { x: 0, y: 0 },
+    toyPoint: null,
+    toyIntensity: "none",
   };
 }
 
-function nextWalkFrame(frame: PetFrame, bounds: Rect, windowSize: Size): Pick<PetFrame, "position" | "velocity" | "facing"> {
-  const nextPosition = clampPointToBounds(
+function nextWalkFrame(
+  frame: PetFrame,
+  bounds: Rect,
+  windowSize: Size,
+  randomValue: number,
+): Pick<PetFrame, "position" | "velocity" | "facing" | "walkTarget"> {
+  const target = frame.walkTarget ?? nextRoamTarget(frame.position, bounds, windowSize, randomValue);
+  const nextPosition = clampPointToBounds(moveToward(frame.position, target, ROAM_SPEED, { x: 0, y: 0 }), bounds, windowSize);
+  const velocity: Velocity = {
+    x: nextPosition.x - frame.position.x,
+    y: nextPosition.y - frame.position.y,
+  };
+  const reachedTarget = distanceBetween(nextPosition, target) <= ROAM_SPEED;
+
+  return {
+    position: nextPosition,
+    velocity: reachedTarget ? { x: WALK_SPEED, y: 0 } : velocity,
+    facing: velocity.x < 0 ? "left" : "right",
+    walkTarget: reachedTarget ? null : target,
+  };
+}
+
+function nextRoamTarget(position: Point, bounds: Rect, windowSize: Size, randomValue: number): Point {
+  const direction = randomValue < 0.5 ? 1 : -1;
+  const distance = 96 + Math.round(clamp01(randomValue) * 120);
+
+  return clampPointToBounds(
     {
-      x: frame.position.x + frame.velocity.x,
-      y: frame.position.y + frame.velocity.y,
+      x: position.x + direction * distance,
+      y: position.y + Math.round((randomValue - 0.5) * 80),
     },
     bounds,
     windowSize,
   );
-  const maxX = bounds.x + Math.max(0, bounds.width - windowSize.width);
-  const hitHorizontalEdge = nextPosition.x === bounds.x || nextPosition.x === maxX;
-  const nextVelocity: Velocity = {
-    x: hitHorizontalEdge ? -frame.velocity.x || WALK_SPEED : frame.velocity.x,
-    y: frame.velocity.y,
-  };
-
-  return {
-    position: nextPosition,
-    velocity: nextVelocity,
-    facing: nextVelocity.x < 0 ? "left" : "right",
-  };
 }
 
 function eyeOffsetForMouse(mouse: Point, center: Point): Point {
@@ -238,6 +282,17 @@ function rectCenter(rect: Rect): Point {
     x: rect.x + rect.width / 2,
     y: rect.y + rect.height / 2,
   };
+}
+
+function localToyPoint(mouseGlobal: Point, position: Point): Point {
+  return {
+    x: Math.round(mouseGlobal.x - position.x),
+    y: Math.round(mouseGlobal.y - position.y),
+  };
+}
+
+function chooseToyAction(randomValue: number): VisualAction {
+  return randomValue < 0.5 ? "pounce" : "swat";
 }
 
 function clamp01(value: number): number {

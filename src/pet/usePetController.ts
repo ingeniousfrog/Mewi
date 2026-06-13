@@ -3,11 +3,11 @@ import { createDesktopWindowClient } from "../desktop/windowClient";
 import { PET_WINDOW_SIZE, WALK_SPEED } from "./constants";
 import { clampPointToBounds } from "./motion";
 import { createInitialPetFrame, nextPetFrame } from "./stateMachine";
-import type { CatBreed, DesktopObject, PetFrame, PetState, Point, Rect, VisualAction } from "./types";
+import { CAT_BREED_STORAGE_KEY, DEFAULT_CAT_BREED, parseCatBreed } from "./breeds";
+import type { CatBreed, DesktopObject, PetFrame, PetState, Point, Rect, ToyIntensity, VisualAction } from "./types";
 
 const TICK_MS = 120;
 const DESKTOP_SCAN_MS = 2000;
-const DEFAULT_BREED: CatBreed = "blue-longhair";
 const INITIAL_POSITION: Point = { x: 96, y: 96 };
 
 type DragSnapshot = Readonly<{
@@ -21,9 +21,12 @@ export type PetController = Readonly<{
   cursorMode: PetFrame["cursorMode"];
   eyeOffset: Point;
   visualAction: VisualAction;
+  toyPoint: Point | null;
+  toyIntensity: ToyIntensity;
   breed: CatBreed;
   dragging: boolean;
   reset: () => Promise<void>;
+  setBreed: (breed: CatBreed) => void;
   startDrag: (pointer: Point) => Promise<void>;
   moveDrag: (pointer: Point) => Promise<void>;
   endDrag: () => void;
@@ -33,6 +36,7 @@ export type PetController = Readonly<{
 export function usePetController(): PetController {
   const client = useMemo(() => createDesktopWindowClient(), []);
   const [frame, setFrame] = useState<PetFrame>(() => createInitialPetFrame(INITIAL_POSITION));
+  const [breed, setBreedState] = useState<CatBreed>(() => loadStoredBreed());
   const [dragging, setDragging] = useState(false);
   const draggingRef = useRef(false);
   const frameRef = useRef<PetFrame>(frame);
@@ -40,6 +44,7 @@ export function usePetController(): PetController {
   const dragSnapshotRef = useRef<DragSnapshot | null>(null);
   const desktopObjectsRef = useRef<readonly DesktopObject[]>([]);
   const forceStateChangeRef = useRef(false);
+  const previousMouseGlobalRef = useRef<Point | null>(null);
 
   const setFrameValue = useCallback((nextFrame: PetFrame) => {
     frameRef.current = nextFrame;
@@ -50,12 +55,23 @@ export function usePetController(): PetController {
     lastInteractionAtMsRef.current = Date.now();
   }, []);
 
+  const setBreed = useCallback(
+    (nextBreed: CatBreed) => {
+      setBreedState(nextBreed);
+      storeBreed(nextBreed);
+      client.setTrayBreed(nextBreed).catch((error: unknown) => {
+        console.error("Unable to sync Mewi breed menu", error);
+      });
+    },
+    [client],
+  );
+
   const reset = useCallback(async () => {
     const bounds = await client.getBounds();
     const position = clampPointToBounds(
       {
-        x: bounds.x + Math.round(bounds.width * 0.18),
-        y: bounds.y + Math.round(bounds.height * 0.62),
+        x: bounds.x + Math.round(bounds.width * 0.42),
+        y: bounds.y + Math.round(bounds.height * 0.58),
       },
       bounds,
       PET_WINDOW_SIZE,
@@ -69,6 +85,7 @@ export function usePetController(): PetController {
     lastInteractionAtMsRef.current = Date.now();
     dragSnapshotRef.current = null;
     forceStateChangeRef.current = false;
+    previousMouseGlobalRef.current = null;
   }, [client, setFrameValue]);
 
   const startDrag = useCallback(
@@ -89,6 +106,9 @@ export function usePetController(): PetController {
         state: "drag",
         cursorMode: "default",
         visualAction: "none",
+        toyPoint: null,
+        toyIntensity: "none",
+        walkTarget: null,
         velocity: { x: WALK_SPEED, y: 0 },
       });
     },
@@ -117,6 +137,9 @@ export function usePetController(): PetController {
         position,
         cursorMode: "default" as const,
         visualAction: "none" as const,
+        toyPoint: null,
+        toyIntensity: "none" as const,
+        walkTarget: null,
       };
 
       await client.setPosition(position);
@@ -136,12 +159,17 @@ export function usePetController(): PetController {
       state: "idle",
       cursorMode: "default",
       visualAction: "none",
+      toyPoint: null,
+      toyIntensity: "none",
+      walkTarget: null,
       nextRandomAtMs: Date.now() + 3000,
     });
   }, [markInteraction, setFrameValue]);
 
   useEffect(() => {
     let removeResetListener: (() => void) | null = null;
+    let removeBringBackListener: (() => void) | null = null;
+    let removeBreedListener: (() => void) | null = null;
     let active = true;
 
     void reset();
@@ -159,11 +187,45 @@ export function usePetController(): PetController {
       console.error("Unable to attach Mewi reset listener", error);
     });
 
+    client.onBringBack(() => {
+      void reset();
+    }).then((unlisten) => {
+      if (active) {
+        removeBringBackListener = unlisten;
+        return;
+      }
+
+      unlisten();
+    }).catch((error: unknown) => {
+      console.error("Unable to attach Mewi bring-back listener", error);
+    });
+
+    client.onBreedChange((payload) => {
+      setBreed(parseCatBreed(payload));
+    }).then((unlisten) => {
+      if (active) {
+        removeBreedListener = unlisten;
+        return;
+      }
+
+      unlisten();
+    }).catch((error: unknown) => {
+      console.error("Unable to attach Mewi breed listener", error);
+    });
+
     return () => {
       active = false;
       removeResetListener?.();
+      removeBringBackListener?.();
+      removeBreedListener?.();
     };
-  }, [client, reset]);
+  }, [client, reset, setBreed]);
+
+  useEffect(() => {
+    client.setTrayBreed(breed).catch((error: unknown) => {
+      console.error("Unable to sync Mewi breed menu", error);
+    });
+  }, [breed, client]);
 
   useEffect(() => {
     const scan = () => {
@@ -213,6 +275,7 @@ export function usePetController(): PetController {
           bounds,
           windowSize: PET_WINDOW_SIZE,
           mouseGlobal,
+          previousMouseGlobal: previousMouseGlobalRef.current,
           dragging: draggingRef.current,
           nowMs,
           lastInteractionAtMs: lastInteractionAtMsRef.current,
@@ -221,6 +284,7 @@ export function usePetController(): PetController {
           forceStateChange: forceStateChangeRef.current,
         });
         forceStateChangeRef.current = false;
+        previousMouseGlobalRef.current = mouseGlobal;
 
         if (
           nextFrame.position.x !== frameRef.current.position.x ||
@@ -255,12 +319,31 @@ export function usePetController(): PetController {
     cursorMode: frame.cursorMode,
     eyeOffset: frame.eyeOffset,
     visualAction: frame.visualAction,
-    breed: DEFAULT_BREED,
+    toyPoint: frame.toyPoint,
+    toyIntensity: frame.toyIntensity,
+    breed,
     dragging,
     reset,
+    setBreed,
     startDrag,
     moveDrag,
     endDrag,
     markInteraction,
   };
+}
+
+function loadStoredBreed(): CatBreed {
+  if (typeof window === "undefined") {
+    return DEFAULT_CAT_BREED;
+  }
+
+  return parseCatBreed(window.localStorage.getItem(CAT_BREED_STORAGE_KEY));
+}
+
+function storeBreed(breed: CatBreed): void {
+  try {
+    window.localStorage.setItem(CAT_BREED_STORAGE_KEY, breed);
+  } catch (error) {
+    console.error("Unable to store Mewi breed", error);
+  }
 }

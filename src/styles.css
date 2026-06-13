@@ -24,6 +24,7 @@ button {
 }
 
 .petStage {
+  position: relative;
   display: grid;
   width: 520px;
   height: 520px;
@@ -41,6 +42,8 @@ button {
   touch-action: none;
 }
 
+.petStage-dragging,
+.petStage-dragging .petHitArea,
 .petHitArea:active {
   cursor: grabbing;
 }
@@ -51,6 +54,48 @@ button {
 
 .petStage-cursor-default {
   cursor: default;
+}
+
+.teaserToy {
+  position: absolute;
+  left: var(--toy-x);
+  top: var(--toy-y);
+  z-index: 2;
+  width: 86px;
+  height: 86px;
+  pointer-events: none;
+  translate: -12px -66px;
+  transform-origin: 12px 66px;
+  animation: mewi-toy-tease 0.85s ease-in-out infinite;
+}
+
+.teaserToy-excited {
+  animation-duration: 0.34s;
+}
+
+.teaserToy-line {
+  position: absolute;
+  left: 8px;
+  top: 42px;
+  width: 66px;
+  height: 3px;
+  border-radius: 999px;
+  background: #2a2724;
+  rotate: -43deg;
+  transform-origin: 0 50%;
+}
+
+.teaserToy-feather {
+  position: absolute;
+  left: 60px;
+  top: 8px;
+  width: 25px;
+  height: 34px;
+  border: 2px solid #2a2724;
+  border-radius: 70% 35% 65% 40%;
+  background: #ef6f87;
+  box-shadow: -9px 8px 0 #5cc8ff;
+  rotate: 22deg;
 }
 
 .catSprite {
@@ -95,6 +140,15 @@ button {
 
 .catSprite-drag {
   animation: mewi-drag 0.52s ease-in-out infinite;
+}
+
+.catSprite-toy-excited .catTail {
+  animation-duration: 0.42s;
+}
+
+.catSprite-run .catPaw-left,
+.catSprite-run .catPaw-right {
+  animation: mewi-swat-paws 0.34s ease-in-out infinite;
 }
 
 .catSvg {
@@ -182,6 +236,12 @@ button {
   font-weight: 800;
   opacity: 0.65;
   animation: mewi-action 0.9s ease-in-out infinite;
+}
+
+.catSprite[data-visual-action="pounce"] .catActionGlyph,
+.catSprite[data-visual-action="swat"] .catActionGlyph {
+  fill: #ef6f87;
+  opacity: 0.9;
 }
 
 .catBreed-blue-longhair {
@@ -353,5 +413,29 @@ button {
 
   50% {
     translate: 0 -5px;
+  }
+}
+
+@keyframes mewi-toy-tease {
+  0%,
+  100% {
+    rotate: -9deg;
+    scale: 1;
+  }
+
+  50% {
+    rotate: 12deg;
+    scale: 1.08;
+  }
+}
+
+@keyframes mewi-swat-paws {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 5px -7px;
   }
 }

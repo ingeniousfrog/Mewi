@@ -49,6 +49,13 @@ describe("pet state machine", () => {
     expect(resolveCursorMode(null, 1000, 1000 + TEASER_HOLD_MS + 1)).toBe("default");
   });
 
+  it("hides the visible toy while only the cursor delay is active", () => {
+    const result = nextPetFrame(input({ frame: frame({ lastNearMouseAtMs: 1000 }), nowMs: 1000 + TEASER_HOLD_MS - 1 }));
+
+    expect(result.cursorMode).toBe("teaser");
+    expect(result.toyPoint).toBeNull();
+  });
+
   it("prioritizes drag over teaser and mouse states", () => {
     const result = nextPetFrame(input({ dragging: true, mouseGlobal: pointAtDistance(20) }));
     expect(result.state).toBe("drag");
@@ -60,7 +67,7 @@ describe("pet state machine", () => {
     expect(result.state).toBe("sleep");
   });
 
-  it("randomizes only idle, walk, and stretch within a three to eight second window", () => {
+  it("randomizes only idle, walk, and stretch within a two to five second window", () => {
     expect([chooseRandomState(0), chooseRandomState(0.4), chooseRandomState(0.9)]).toEqual([
       "idle",
       "walk",
@@ -68,6 +75,45 @@ describe("pet state machine", () => {
     ]);
     expect(nextRandomDelayMs(0)).toBe(RANDOM_STATE_MIN_MS);
     expect(nextRandomDelayMs(1)).toBe(RANDOM_STATE_MAX_MS);
+  });
+
+  it("moves toward a short roaming target when walk is selected", () => {
+    const result = nextPetFrame(input({ nowMs: 3000, randomValue: 0.4 }));
+
+    expect(result.state).toBe("walk");
+    expect(result.position.x).toBeGreaterThan(start.x);
+    expect(result.walkTarget).not.toBeNull();
+  });
+
+  it("outputs a visible teaser toy while the mouse is nearby", () => {
+    const result = nextPetFrame(input({ mouseGlobal: pointAtDistance(LOOK_RADIUS - 4) }));
+
+    expect(result.state).toBe("look");
+    expect(result.cursorMode).toBe("teaser");
+    expect(result.toyPoint).toEqual({ x: LOOK_RADIUS - 4 + 260, y: 260 });
+    expect(result.toyIntensity).toBe("tease");
+  });
+
+  it("gets excited and pounces when the mouse is close", () => {
+    const result = nextPetFrame(input({ mouseGlobal: pointAtDistance(RUN_RADIUS - 4), randomValue: 0.2 }));
+
+    expect(result.state).toBe("run");
+    expect(result.toyIntensity).toBe("excited");
+    expect(result.visualAction).toBe("pounce");
+  });
+
+  it("gets excited and swats when the mouse moves quickly inside the teaser range", () => {
+    const result = nextPetFrame(
+      input({
+        mouseGlobal: pointAtDistance(180),
+        previousMouseGlobal: pointAtDistance(80),
+        randomValue: 0.9,
+      }),
+    );
+
+    expect(result.state).toBe("look");
+    expect(result.toyIntensity).toBe("excited");
+    expect(result.visualAction).toBe("swat");
   });
 
   it("stretches on forced view changes when the mouse is not nearby", () => {
