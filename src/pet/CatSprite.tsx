@@ -1,0 +1,34 @@
+import type { PetState } from "./types";
+
+type CatSpriteProps = Readonly<{
+  state: PetState;
+  facing: "left" | "right";
+  nearbyMouse: boolean;
+}>;
+
+export function CatSprite({ state, facing, nearbyMouse }: CatSpriteProps) {
+  const className = `catSprite catSprite-${state} catSprite-${facing}`;
+
+  return (
+    <div className={className} aria-label={`Mewi is ${state}`}>
+      <svg className="catSvg" viewBox="0 0 180 180" role="img" aria-hidden="true">
+        <ellipse className="catShadow" cx="91" cy="150" rx="55" ry="13" />
+        <path className="catTail" d="M132 111 C164 92 156 55 132 66 C118 72 122 90 137 84" />
+        <path className="catBody" d="M52 95 C52 70 70 51 94 51 C123 51 142 73 140 104 L137 133 C135 146 124 154 91 154 C60 154 47 145 47 128 Z" />
+        <path className="catHead" d="M48 75 L56 38 L78 57 C88 53 99 53 110 57 L133 38 L139 75 C148 91 144 116 128 128 C112 139 73 139 57 128 C40 115 39 91 48 75 Z" />
+        <path className="catInnerEar" d="M59 63 L62 50 L71 61 Z" />
+        <path className="catInnerEar" d="M126 63 L124 50 L115 61 Z" />
+        <g className="catFace">
+          <ellipse className="catEye catEye-left" cx="75" cy="91" rx="7" ry={state === "sleep" ? "1.5" : "8"} />
+          <ellipse className="catEye catEye-right" cx="113" cy="91" rx="7" ry={state === "sleep" ? "1.5" : "8"} />
+          <path className="catNose" d="M90 102 L96 102 L93 107 Z" />
+          <path className="catMouth" d="M93 108 C88 113 82 113 79 109 M93 108 C98 113 104 113 107 109" />
+          <path className="catWhiskers" d="M68 104 L42 98 M68 111 L39 113 M118 104 L144 98 M118 111 L147 113" />
+        </g>
+        <path className="catPaw catPaw-left" d="M65 137 C65 148 80 148 81 137" />
+        <path className="catPaw catPaw-right" d="M106 137 C106 148 121 148 122 137" />
+        {nearbyMouse ? <circle className="catSpark" cx="128" cy="70" r="5" /> : null}
+      </svg>
+    </div>
+  );
+}

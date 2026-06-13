@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions needed for the pet window prototype.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-current-monitor",
+    "core:window:allow-outer-position",
+    "core:window:allow-set-position",
+    "core:event:allow-listen"
+  ]
+}

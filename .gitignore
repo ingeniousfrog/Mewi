@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+src-tauri/target
+.pnpm-store
+pnpm-lock.yaml
+pnpm-workspace.yaml
+*.log
+.DS_Store
