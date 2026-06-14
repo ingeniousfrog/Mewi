@@ -155,8 +155,42 @@ describe("pet state machine", () => {
     const result = nextPetFrame(input({ desktopObjects: [object], randomValue: 0.8 }));
 
     expect(findNearbyDesktopObject(center, [object], livelyConfig.nearbyObjectRadius)?.kind).toBe("folder");
-    expect(chooseVisualAction(object, 0.8)).toBe("sit");
-    expect(result.visualAction).toBe("sit");
+    expect(chooseVisualAction(object, 0.8)).toBe("folder-dig");
+    expect(result.visualAction).toBe("folder-dig");
+  });
+
+  it("starts fishing when idle and no desktop objects are nearby", () => {
+    const result = nextPetFrame(
+      input({
+        nowMs: 3000,
+        randomValue: 0.1,
+        desktopObjects: [],
+      }),
+    );
+
+    expect(result.state).toBe("fish");
+    expect(result.visualAction).toBe("fishing");
+    expect(result.fishUntilMs).toBeGreaterThan(3000);
+    expect(result.fishCatchAtMs).toBeGreaterThan(3000);
+  });
+
+  it("switches to fish catch near the end of fishing", () => {
+    const fishStart = 1000;
+    const catchAt = fishStart + 5200 - 900;
+    const result = nextPetFrame(
+      input({
+        frame: frame({
+          state: "fish",
+          visualAction: "fishing",
+          fishUntilMs: fishStart + 5200,
+          fishCatchAtMs: catchAt,
+        }),
+        nowMs: catchAt + 50,
+      }),
+    );
+
+    expect(result.state).toBe("fish");
+    expect(result.visualAction).toBe("fish-catch");
   });
 
   it("extends pet head interactions for a short duration", () => {

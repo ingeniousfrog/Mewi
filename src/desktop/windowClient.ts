@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { cursorPosition, getCurrentWindow, LogicalSize, PhysicalPosition } from "@tauri-apps/api/window";
+import { cursorPosition, getCurrentWindow, LogicalPosition, LogicalSize, type Window } from "@tauri-apps/api/window";
 import type { PermissionStatus } from "../pet/onboarding";
 import { ONBOARDING_WINDOW_SIZE, PET_WINDOW_SIZE } from "../pet/constants";
 import type { DesktopObject, DesktopObjectKind, Point, Rect, Size } from "../pet/types";
@@ -60,27 +60,52 @@ const fallbackClient: DesktopWindowClient = {
   setTrayMute: async () => undefined,
 };
 
+async function readScaleFactor(appWindow: Window): Promise<number> {
+  try {
+    return await appWindow.scaleFactor();
+  } catch {
+    return 1;
+  }
+}
+
 export function createDesktopWindowClient(): DesktopWindowClient {
   if (!("__TAURI_INTERNALS__" in window)) {
     return fallbackClient;
   }
 
   const appWindow = getCurrentWindow();
+  let scaleFactorPromise = readScaleFactor(appWindow);
+
+  const refreshScaleFactor = () => {
+    scaleFactorPromise = readScaleFactor(appWindow);
+  };
+
+  void appWindow.onScaleChanged(() => {
+    refreshScaleFactor();
+  }).catch((error: unknown) => {
+    console.error("Unable to attach Mewi scale listener", error);
+  });
+
+  const getScaleFactor = async () => scaleFactorPromise;
 
   return {
     getPosition: async () => {
+      const scale = await getScaleFactor();
       const position = await appWindow.outerPosition();
-      return { x: position.x, y: position.y };
+      const logical = position.toLogical(scale);
+      return { x: logical.x, y: logical.y };
     },
     setPosition: async (point) => {
-      await appWindow.setPosition(new PhysicalPosition(point.x, point.y));
+      await appWindow.setPosition(new LogicalPosition(point.x, point.y));
     },
     setSize: async (size) => {
       await appWindow.setSize(new LogicalSize(size.width, size.height));
     },
     getCursorPosition: async () => {
+      const scale = await getScaleFactor();
       const position = await cursorPosition();
-      return { x: position.x, y: position.y };
+      const logical = position.toLogical(scale);
+      return { x: logical.x, y: logical.y };
     },
     setIgnoreCursorEvents: async (ignore) => {
       await appWindow.setIgnoreCursorEvents(ignore);

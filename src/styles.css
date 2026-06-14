@@ -1,7 +1,8 @@
 :root {
   color-scheme: light;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "SF Pro Rounded", "Nunito", ui-rounded, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   background: transparent;
 }
 
@@ -57,7 +58,8 @@ button {
 }
 
 .petStage-cursor-teaser {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M7 36 L33 10' stroke='%232a2724' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M31 8 C39 5 42 13 36 18 C31 22 28 14 31 8Z' fill='%23ef6f87' stroke='%232a2724' stroke-width='2'/%3E%3Ccircle cx='8' cy='36' r='4' fill='%235cc8ff' stroke='%232a2724' stroke-width='2'/%3E%3C/svg%3E") 8 36, auto;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M7 36 L33 10' stroke='%233a3530' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M31 8 C39 5 42 13 36 18 C31 22 28 14 31 8Z' fill='%23ff8fab' stroke='%233a3530' stroke-width='2'/%3E%3Ccircle cx='8' cy='36' r='4' fill='%237ec8ff' stroke='%233a3530' stroke-width='2'/%3E%3C/svg%3E")
+    8 36, auto;
 }
 
 .petStage-cursor-default {
@@ -65,61 +67,25 @@ button {
 }
 
 .petStage-cursor-pet {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M8 18 C8 10 14 6 20 8 C26 10 28 18 24 24 C20 28 10 26 8 18Z' fill='%23ef8f88' stroke='%232a2724' stroke-width='2'/%3E%3Ctext x='13' y='20' font-size='10' fill='%232a2724'%3E♡%3C/text%3E%3C/svg%3E") 12 16, pointer;
-}
-
-.teaserToy {
-  position: absolute;
-  left: var(--toy-x);
-  top: var(--toy-y);
-  z-index: 2;
-  width: 86px;
-  height: 86px;
-  pointer-events: none;
-  translate: -12px -66px;
-  transform-origin: 12px 66px;
-  animation: mewi-toy-tease 0.85s ease-in-out infinite;
-}
-
-.teaserToy-excited {
-  animation-duration: 0.34s;
-}
-
-.teaserToy-line {
-  position: absolute;
-  left: 8px;
-  top: 42px;
-  width: 66px;
-  height: 3px;
-  border-radius: 999px;
-  background: #2a2724;
-  rotate: -43deg;
-  transform-origin: 0 50%;
-}
-
-.teaserToy-feather {
-  position: absolute;
-  left: 60px;
-  top: 8px;
-  width: 25px;
-  height: 34px;
-  border: 2px solid #2a2724;
-  border-radius: 70% 35% 65% 40%;
-  background: #ef6f87;
-  box-shadow: -9px 8px 0 #5cc8ff;
-  rotate: 22deg;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M8 18 C8 10 14 6 20 8 C26 10 28 18 24 24 C20 28 10 26 8 18Z' fill='%23ffb4a8' stroke='%233a3530' stroke-width='2'/%3E%3Ctext x='13' y='20' font-size='10' fill='%233a3530'%3E♡%3C/text%3E%3C/svg%3E")
+    12 16, pointer;
 }
 
 .catSprite {
   width: 168px;
   height: 168px;
   transform-origin: 50% 88%;
-  filter: drop-shadow(0 10px 14px rgb(27 31 35 / 18%));
-  --cat-fur: #f8c86f;
-  --cat-stroke: #2a2724;
-  --cat-ear: #ef8f88;
-  --cat-eye: #24211f;
-  --cat-nose: #dd6d6f;
+  filter: drop-shadow(0 8px 16px rgb(40 32 28 / 16%));
+  --cat-fur: #f4c56a;
+  --cat-fur-light: #ffe8a8;
+  --cat-fur-dark: #d9a44a;
+  --cat-stroke: #4a4038;
+  --cat-stroke-soft: rgb(74 64 56 / 55%);
+  --cat-ear: #ffb4a8;
+  --cat-eye: #2d2520;
+  --cat-nose: #ff8fab;
+  --cat-blush: rgb(255 143 171 / 42%);
+  --cat-belly: rgb(255 255 255 / 28%);
 }
 
 .catSprite-left {
@@ -127,78 +93,86 @@ button {
 }
 
 .catSprite-idle {
-  animation: mewi-breathe 2.8s ease-in-out infinite;
+  animation: mewi-breathe 2.6s ease-in-out infinite;
 }
 
-.catSprite-walk {
-  animation: mewi-walk 0.72s ease-in-out infinite;
+.catSprite-walk,
+.catSprite-explore {
+  animation: mewi-walk 0.58s ease-in-out infinite;
 }
 
 .catSprite-run {
-  animation: mewi-run 0.36s ease-in-out infinite;
+  animation: mewi-run 0.34s ease-in-out infinite;
 }
 
 .catSprite-sleep {
-  animation: mewi-sleep 3.6s ease-in-out infinite;
+  animation: mewi-sleep 3.4s ease-in-out infinite;
 }
 
 .catSprite-stretch {
-  animation: mewi-stretch 1.8s ease-in-out infinite;
+  animation: mewi-stretch 1.6s ease-in-out infinite;
 }
 
 .catSprite-look {
-  animation: mewi-look 0.9s ease-in-out infinite;
+  animation: mewi-look 0.85s ease-in-out infinite;
 }
 
 .catSprite-drag {
-  animation: mewi-drag 0.52s ease-in-out infinite;
+  animation: mewi-drag 0.48s ease-in-out infinite;
 }
 
 .catSprite-petHead {
-  animation: mewi-pet-head 1.1s ease-in-out infinite;
-}
-
-.catSprite-explore {
-  animation: mewi-walk 0.62s ease-in-out infinite;
+  animation: mewi-pet-head 1s ease-in-out infinite;
 }
 
 .catSprite-perform {
-  animation: mewi-perform 0.55s ease-in-out infinite;
+  animation: mewi-perform 0.5s ease-in-out infinite;
+}
+
+.catSprite-fish {
+  animation: mewi-fish-idle 1.4s ease-in-out infinite;
 }
 
 .catSprite[data-visual-action="hop"] {
-  animation: mewi-hop 0.42s ease-in-out infinite;
-}
-
-.catSprite-toy-excited .catTail {
-  animation-duration: 0.42s;
-}
-
-.catSprite-run .catPaw-left,
-.catSprite-run .catPaw-right {
-  animation: mewi-swat-paws 0.34s ease-in-out infinite;
+  animation: mewi-hop 0.38s ease-in-out infinite;
 }
 
 .catSvg {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
 .catShadow {
-  fill: rgb(30 35 42 / 16%);
+  fill: rgb(30 35 42 / 14%);
+  animation: mewi-shadow 2.6s ease-in-out infinite;
 }
 
-.catTail,
-.catFur,
-.catBody,
-.catHead {
-  fill: var(--cat-fur);
-  stroke: var(--cat-stroke);
+.catTail {
+  fill: none;
+  stroke: url(#catTailGrad);
   stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 5;
-  pointer-events: none;
+  stroke-width: 16;
+  transform-origin: 126px 108px;
+  animation: mewi-tail 1.8s ease-in-out infinite;
+}
+
+.catBody {
+  fill: url(#catBodyGrad);
+  stroke: var(--cat-stroke);
+  stroke-width: 3.5;
+}
+
+.catBelly {
+  fill: var(--cat-belly);
+  stroke: none;
+}
+
+.catHead {
+  fill: url(#catHeadGrad);
+  stroke: var(--cat-stroke);
+  stroke-width: 3.5;
 }
 
 .catHeadHit {
@@ -207,34 +181,56 @@ button {
   cursor: inherit;
 }
 
-.catTail {
-  fill: none;
-  stroke-width: 14;
-  transform-origin: 126px 112px;
-  animation: mewi-tail 2.2s ease-in-out infinite;
-}
-
-.catFur {
-  fill: none;
+.catEar {
+  fill: url(#catHeadGrad);
+  stroke: var(--cat-stroke);
+  stroke-linejoin: round;
   stroke-width: 3;
-  opacity: 0.55;
 }
 
 .catInnerEar {
   fill: var(--cat-ear);
-  stroke: var(--cat-stroke);
-  stroke-linejoin: round;
-  stroke-width: 3;
+  stroke: none;
+}
+
+.catEar-left,
+.catInnerEar-left {
+  transform-origin: 66px 40px;
+  animation: mewi-ear-left 3.2s ease-in-out infinite;
+}
+
+.catEar-right,
+.catInnerEar-right {
+  transform-origin: 114px 40px;
+  animation: mewi-ear-right 3.6s ease-in-out 0.4s infinite;
+}
+
+.catBlush {
+  fill: var(--cat-blush);
+  stroke: none;
+}
+
+.catEyeWhite {
+  fill: #fff;
+  stroke: var(--cat-stroke-soft);
+  stroke-width: 1.5;
 }
 
 .catEye {
   fill: var(--cat-eye);
   transform-origin: center;
   translate: var(--eye-x, 0) var(--eye-y, 0);
+  animation: mewi-blink 4.8s ease-in-out infinite;
+}
+
+.catEyeShine {
+  fill: #fff;
+  translate: var(--eye-x, 0) var(--eye-y, 0);
 }
 
 .catNose {
   fill: var(--cat-nose);
+  stroke: none;
 }
 
 .catMouth,
@@ -244,66 +240,200 @@ button {
   stroke: var(--cat-stroke);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 4;
+  stroke-width: 3.2;
 }
 
 .catWhiskers {
-  stroke-width: 3;
-}
-
-.catSpark {
-  fill: #5cc8ff;
-  animation: mewi-spark 0.7s ease-in-out infinite;
+  stroke-width: 2.2;
+  opacity: 0.85;
 }
 
 .catZzz {
-  fill: #4d6474;
+  fill: #6b8aa3;
   font-family: Georgia, serif;
   font-weight: 800;
-  opacity: 0.8;
-  animation: mewi-zzz 1.8s ease-in-out infinite;
+  opacity: 0.85;
+  animation: mewi-zzz 1.6s ease-in-out infinite;
 }
 
-.catActionGlyph {
-  fill: #2a2724;
-  font-family: Georgia, serif;
-  font-size: 22px;
-  font-weight: 800;
-  opacity: 0.65;
-  animation: mewi-action 0.9s ease-in-out infinite;
+.catFolder,
+.catFolderTab {
+  fill: #ffd166;
+  stroke: var(--cat-stroke);
+  stroke-linejoin: round;
+  stroke-width: 2.5;
 }
 
-.catSprite[data-visual-action="pounce"] .catActionGlyph,
-.catSprite[data-visual-action="swat"] .catActionGlyph {
-  fill: #ef6f87;
-  opacity: 0.9;
+.catFolderTab {
+  fill: #ffe08a;
 }
 
-.catSprite[data-visual-action="head-rub"] .catActionGlyph {
-  fill: #ef6f87;
-  opacity: 0.95;
-  font-size: 24px;
+.catProp-folder .catDigPaw {
+  fill: url(#catHeadGrad);
+  stroke: var(--cat-stroke);
+  stroke-width: 2.5;
+  transform-origin: 62px 118px;
+  animation: mewi-dig-paw 0.45s ease-in-out infinite;
 }
 
-.catSprite-petHead .catHead {
-  animation: mewi-head-rub 1.1s ease-in-out infinite;
+.catDust circle {
+  fill: #c9b59a;
+  opacity: 0.75;
+  animation: mewi-dust 0.55s ease-out infinite;
 }
 
-.catSprite-petHead .catWhiskers {
-  animation: mewi-whisker-relax 1.1s ease-in-out infinite;
+.catDust circle:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.catDust circle:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.catPhoto {
+  fill: #fff8ef;
+  stroke: var(--cat-stroke);
+  stroke-width: 2.5;
+}
+
+.catPhotoSun {
+  fill: #ffd166;
+}
+
+.catPhotoHill {
+  fill: #8fd694;
+  stroke: none;
+}
+
+.catProp-image .catHeadGroup {
+  animation: mewi-head-rub 0.9s ease-in-out infinite;
+}
+
+.catHearts path {
+  fill: #ff8fab;
+  stroke: none;
+  animation: mewi-heart 0.9s ease-in-out infinite;
+}
+
+.catHearts path:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.catTerminal {
+  fill: #3d4654;
+  stroke: var(--cat-stroke);
+  stroke-width: 2.5;
+}
+
+.catTerminalScreen {
+  fill: #1f2933;
+  stroke: none;
+}
+
+.catTerminalGlyph {
+  fill: #7dffb3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+  animation: mewi-terminal-blink 0.32s steps(2) infinite;
+}
+
+.catTypePaws path {
+  fill: url(#catHeadGrad);
+  stroke: var(--cat-stroke);
+  stroke-width: 2.5;
+  animation: mewi-type-paws 0.28s ease-in-out infinite;
+}
+
+.catTypePaws path:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.catPond {
+  fill: rgb(92 200 255 / 28%);
+  stroke: rgb(92 200 255 / 55%);
+  stroke-width: 2;
+}
+
+.catRipple {
+  fill: none;
+  stroke: rgb(92 200 255 / 45%);
+  stroke-linecap: round;
+  stroke-width: 2;
+  animation: mewi-ripple 1.2s ease-in-out infinite;
+}
+
+.catRipple-2 {
+  animation-delay: 0.35s;
+}
+
+.catRod {
+  fill: none;
+  stroke: #8b5a2b;
+  stroke-linecap: round;
+  stroke-width: 3.5;
+  transform-origin: 118px 68px;
+  animation: mewi-rod 1.4s ease-in-out infinite;
+}
+
+.catRodLine {
+  fill: none;
+  stroke: rgb(74 64 56 / 55%);
+  stroke-width: 1.5;
+}
+
+.catBobber {
+  fill: #ff6b6b;
+  stroke: #fff;
+  stroke-width: 1.5;
+  animation: mewi-bobber 1.1s ease-in-out infinite;
+}
+
+.catJumpFish ellipse,
+.catCaughtFish ellipse {
+  fill: #7ec8ff;
+  stroke: var(--cat-stroke);
+  stroke-width: 2;
+}
+
+.catJumpFish path,
+.catCaughtFish path {
+  fill: #7ec8ff;
+  stroke: var(--cat-stroke);
+  stroke-width: 2;
+}
+
+.catJumpFish {
+  animation: mewi-jump-fish 1.8s ease-in-out infinite;
+}
+
+.catCaughtFish {
+  animation: mewi-caught-fish 0.55s ease-out infinite;
+}
+
+.catSplash circle {
+  fill: rgb(92 200 255 / 70%);
+  animation: mewi-splash 0.55s ease-out infinite;
+}
+
+.catFishPaw {
+  fill: url(#catHeadGrad);
+  stroke: var(--cat-stroke);
+  stroke-width: 2.5;
+  transform-origin: 120px 96px;
+  animation: mewi-fish-paw 1.4s ease-in-out infinite;
 }
 
 .catMirrorKeyboard-body,
 .catMirrorDrum {
-  fill: #ece4d8;
+  fill: #f5efe6;
   stroke: var(--cat-stroke);
-  stroke-width: 3;
+  stroke-width: 2.5;
 }
 
 .catMirrorKeyboard-key {
   fill: #fffdf8;
   stroke: var(--cat-stroke);
-  stroke-width: 2;
+  stroke-width: 1.8;
 }
 
 .catMirrorStick,
@@ -311,28 +441,62 @@ button {
   fill: none;
   stroke: var(--cat-stroke);
   stroke-linecap: round;
-  stroke-width: 4;
+  stroke-width: 3.5;
 }
 
 .catMirrorPaw {
-  fill: var(--cat-fur);
+  fill: url(#catHeadGrad);
 }
 
 .catSprite-perform .catMirrorKeyboard-key:nth-child(2),
 .catSprite-perform .catMirrorPaw {
-  animation: mewi-type-key 0.32s ease-in-out infinite;
+  animation: mewi-type-key 0.3s ease-in-out infinite;
 }
 
 .catSprite-perform .catMirrorDrum:nth-child(1) {
-  animation: mewi-drum-hit 0.42s ease-in-out infinite;
+  animation: mewi-drum-hit 0.4s ease-in-out infinite;
 }
 
 .catSprite-perform .catMirrorDrum:nth-child(2) {
-  animation: mewi-drum-hit 0.42s ease-in-out 0.14s infinite;
+  animation: mewi-drum-hit 0.4s ease-in-out 0.12s infinite;
 }
 
 .catSprite-perform .catMirrorDrum:nth-child(3) {
-  animation: mewi-drum-hit 0.42s ease-in-out 0.28s infinite;
+  animation: mewi-drum-hit 0.4s ease-in-out 0.24s infinite;
+}
+
+.catBreed-blue-longhair {
+  --cat-fur: #a8b8c8;
+  --cat-fur-light: #d8e4ef;
+  --cat-fur-dark: #7f95a8;
+  --cat-ear: #e8b4b8;
+  --cat-eye: #1f3440;
+}
+
+.catBreed-garfield {
+  --cat-fur: #f0a04b;
+  --cat-fur-light: #ffd08a;
+  --cat-fur-dark: #c97a2d;
+  --cat-ear: #ffc9a0;
+  --cat-eye: #241f1a;
+}
+
+.catBreed-garfield .catHead {
+  transform: scaleX(1.06);
+  transform-origin: 90px 78px;
+}
+
+.catBreed-british-shorthair {
+  --cat-fur: #c4ad92;
+  --cat-fur-light: #e8d8c4;
+  --cat-fur-dark: #9a8468;
+  --cat-ear: #e8b0a8;
+  --cat-eye: #31402e;
+}
+
+.catBreed-british-shorthair .catBody {
+  transform: scaleX(1.04);
+  transform-origin: 92px 118px;
 }
 
 .onboardingOverlay {
@@ -437,39 +601,6 @@ button {
   line-height: 1.5;
 }
 
-.catBreed-blue-longhair {
-  --cat-fur: #9fb0bc;
-  --cat-ear: #d4a6a8;
-  --cat-eye: #22343f;
-}
-
-.catBreed-blue-longhair .catFur {
-  stroke-width: 5;
-  opacity: 0.72;
-}
-
-.catBreed-garfield {
-  --cat-fur: #e99145;
-  --cat-ear: #f0ad8e;
-  --cat-eye: #1f1b18;
-}
-
-.catBreed-garfield .catHead {
-  transform: scaleX(1.08);
-  transform-origin: 93px 92px;
-}
-
-.catBreed-british-shorthair {
-  --cat-fur: #b9a083;
-  --cat-ear: #e5aaa1;
-  --cat-eye: #2f3c2c;
-}
-
-.catBreed-british-shorthair .catBody {
-  transform: scaleX(1.05);
-  transform-origin: 92px 112px;
-}
-
 @keyframes mewi-breathe {
   0%,
   100% {
@@ -478,49 +609,49 @@ button {
   }
 
   50% {
-    translate: 0 3px;
-    scale: 1.02 0.98;
+    translate: 0 2px;
+    scale: 1.03 0.97;
   }
 }
 
 @keyframes mewi-walk {
   0%,
   100% {
-    translate: -3px 0;
-    rotate: -1.5deg;
+    translate: -4px 0;
+    rotate: -2deg;
   }
 
   50% {
-    translate: 3px -3px;
-    rotate: 1.5deg;
+    translate: 4px -4px;
+    rotate: 2deg;
   }
 }
 
 @keyframes mewi-run {
   0%,
   100% {
-    translate: -7px -1px;
-    rotate: -5deg;
-    scale: 1.08 0.94;
+    translate: -8px -2px;
+    rotate: -4deg;
+    scale: 1.06 0.94;
   }
 
   50% {
-    translate: 7px -5px;
-    rotate: 5deg;
-    scale: 1.12 0.9;
+    translate: 8px -6px;
+    rotate: 4deg;
+    scale: 1.1 0.9;
   }
 }
 
 @keyframes mewi-sleep {
   0%,
   100% {
-    translate: 0 6px;
-    scale: 1.05 0.9;
+    translate: 0 5px;
+    scale: 1.04 0.92;
   }
 
   50% {
-    translate: 0 8px;
-    scale: 1.08 0.86;
+    translate: 0 7px;
+    scale: 1.06 0.9;
   }
 }
 
@@ -532,56 +663,91 @@ button {
   }
 
   45% {
-    translate: 0 8px;
-    scale: 1.22 0.76;
+    translate: 0 6px;
+    scale: 1.18 0.8;
   }
 }
 
 @keyframes mewi-look {
   0%,
   100% {
-    rotate: -4deg;
+    rotate: -3deg;
   }
 
   50% {
-    rotate: 4deg;
+    rotate: 3deg;
   }
 }
 
 @keyframes mewi-drag {
   0%,
   100% {
-    translate: 0 -5px;
-    rotate: -3deg;
+    translate: 0 -4px;
+    rotate: -2deg;
   }
 
   50% {
-    translate: 0 -8px;
-    rotate: 3deg;
+    translate: 0 -7px;
+    rotate: 2deg;
   }
 }
 
 @keyframes mewi-tail {
   0%,
   100% {
-    rotate: -7deg;
+    rotate: -10deg;
   }
 
   50% {
-    rotate: 9deg;
+    rotate: 12deg;
   }
 }
 
-@keyframes mewi-spark {
+@keyframes mewi-blink {
+  0%,
+  44%,
+  48%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  46% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes mewi-ear-left {
   0%,
   100% {
-    opacity: 0.7;
-    scale: 0.8;
+    rotate: 0deg;
   }
 
   50% {
-    opacity: 1;
-    scale: 1.18;
+    rotate: -6deg;
+  }
+}
+
+@keyframes mewi-ear-right {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  50% {
+    rotate: 6deg;
+  }
+}
+
+@keyframes mewi-shadow {
+  0%,
+  100% {
+    rx: 52;
+    opacity: 0.9;
+  }
+
+  50% {
+    rx: 48;
+    opacity: 0.7;
   }
 }
 
@@ -598,41 +764,6 @@ button {
   }
 }
 
-@keyframes mewi-action {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-
-  50% {
-    translate: 0 -5px;
-  }
-}
-
-@keyframes mewi-toy-tease {
-  0%,
-  100% {
-    rotate: -9deg;
-    scale: 1;
-  }
-
-  50% {
-    rotate: 12deg;
-    scale: 1.08;
-  }
-}
-
-@keyframes mewi-swat-paws {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-
-  50% {
-    translate: 5px -7px;
-  }
-}
-
 @keyframes mewi-hop {
   0%,
   100% {
@@ -641,8 +772,8 @@ button {
   }
 
   35% {
-    translate: 0 -16px;
-    scale: 1.04 0.94;
+    translate: 0 -18px;
+    scale: 1.05 0.94;
   }
 
   55% {
@@ -672,21 +803,8 @@ button {
   }
 
   50% {
-    translate: 4px -2px;
-    rotate: 6deg;
-  }
-}
-
-@keyframes mewi-whisker-relax {
-  0%,
-  100% {
-    translate: 0 0;
-    opacity: 0.85;
-  }
-
-  50% {
-    translate: 2px 1px;
-    opacity: 1;
+    translate: 5px -2px;
+    rotate: 7deg;
   }
 }
 
@@ -700,6 +818,172 @@ button {
   50% {
     translate: 0 -2px;
     rotate: -1deg;
+  }
+}
+
+@keyframes mewi-fish-idle {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -2px;
+  }
+}
+
+@keyframes mewi-dig-paw {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  50% {
+    translate: 6px 8px;
+    rotate: 18deg;
+  }
+}
+
+@keyframes mewi-dust {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+
+  30% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+    translate: 10px -12px;
+  }
+}
+
+@keyframes mewi-heart {
+  0%,
+  100% {
+    opacity: 0.55;
+    translate: 0 0;
+    scale: 0.9;
+  }
+
+  50% {
+    opacity: 1;
+    translate: 0 -6px;
+    scale: 1.08;
+  }
+}
+
+@keyframes mewi-terminal-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes mewi-type-paws {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 6px;
+  }
+}
+
+@keyframes mewi-ripple {
+  0%,
+  100% {
+    opacity: 0.35;
+    scale: 0.95;
+  }
+
+  50% {
+    opacity: 0.9;
+    scale: 1.05;
+  }
+}
+
+@keyframes mewi-rod {
+  0%,
+  100% {
+    rotate: -4deg;
+  }
+
+  50% {
+    rotate: 5deg;
+  }
+}
+
+@keyframes mewi-bobber {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 3px;
+  }
+}
+
+@keyframes mewi-jump-fish {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+    opacity: 0;
+  }
+
+  78% {
+    translate: 0 -10px;
+    opacity: 1;
+  }
+}
+
+@keyframes mewi-caught-fish {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  50% {
+    translate: 0 -8px;
+    rotate: -8deg;
+  }
+}
+
+@keyframes mewi-splash {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+@keyframes mewi-fish-paw {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  50% {
+    rotate: 8deg;
   }
 }
 

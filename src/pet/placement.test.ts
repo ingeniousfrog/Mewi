@@ -19,10 +19,13 @@ describe("pet placement", () => {
     });
   });
 
-  it("places the pet away from the bottom dock area", () => {
+  it("places the pet in a centered lower safe spot", () => {
     const position = defaultPetPosition(bounds, PET_WINDOW_SIZE);
 
-    expect(position.y).toBeLessThanOrEqual(32 + Math.round(820 * 0.4));
+    expect(position).toEqual({
+      x: 622,
+      y: 442,
+    });
     expect(position.y).toBeLessThanOrEqual(32 + 820 - PET_WINDOW_SIZE.height);
   });
 });

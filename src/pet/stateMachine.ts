@@ -20,10 +20,13 @@ import type {
 } from "./types";
 
 const RANDOM_STATES: readonly PetState[] = ["idle", "walk", "stretch"];
-const EXPLORE_ACTION_MIN_MS = 1500;
-const EXPLORE_ACTION_MAX_MS = 3000;
+const EXPLORE_ACTION_MIN_MS = 3200;
+const EXPLORE_ACTION_MAX_MS = 5200;
 const PET_HEAD_DURATION_MS = 1800;
 const PERFORM_DURATION_MS = 2400;
+const FISH_DURATION_MS = 5200;
+const FISH_CATCH_WINDOW_MS = 900;
+const FISH_CHANCE = 0.18;
 
 export type PetFrameInput = Readonly<{
   frame: PetFrame;
@@ -60,6 +63,8 @@ export function createInitialPetFrame(position: Point, nowMs = 0, activityConfig
     exploreActionUntilMs: null,
     petHeadUntilMs: null,
     performUntilMs: null,
+    fishUntilMs: null,
+    fishCatchAtMs: null,
   };
 }
 
@@ -83,19 +88,18 @@ export function resolveCursorMode(headHovered: boolean): CursorMode {
   return headHovered ? "pet" : "default";
 }
 
-export function chooseVisualAction(object: DesktopObject | null, randomValue: number): VisualAction {
+export function chooseVisualAction(object: DesktopObject | null, _randomValue: number): VisualAction {
   if (!object) {
     return "none";
   }
 
-  const variantsByKind: Record<DesktopObject["kind"], readonly VisualAction[]> = {
-    folder: ["sniff", "step", "sit"],
-    image: ["rub", "nap-corner"],
-    terminal: ["fake-push", "terminal-rest"],
+  const actionByKind: Record<DesktopObject["kind"], VisualAction> = {
+    folder: "folder-dig",
+    image: "image-rub",
+    terminal: "terminal-pounce",
   };
-  const variants = variantsByKind[object.kind];
-  const index = Math.min(variants.length - 1, Math.floor(clamp01(randomValue) * variants.length));
-  return variants[index];
+
+  return actionByKind[object.kind];
 }
 
 export function findNearbyDesktopObject(
@@ -171,12 +175,40 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       exploreTargetId: null,
       exploreActionUntilMs: null,
       petHeadUntilMs: null,
+      fishUntilMs: null,
+      fishCatchAtMs: null,
     };
   }
 
-  if (input.nowMs - input.lastInteractionAtMs >= input.activityConfig.sleepAfterMs) {
+  if (frame.fishUntilMs !== null && input.nowMs < frame.fishUntilMs) {
+    const catching = frame.fishCatchAtMs !== null && input.nowMs >= frame.fishCatchAtMs;
+
     return {
       ...baseFrame,
+      state: "fish",
+      visualAction: catching ? "fish-catch" : "fishing",
+      walkTarget: null,
+      exploreTargetId: null,
+      exploreActionUntilMs: null,
+      petHeadUntilMs: null,
+      performUntilMs: null,
+      eyeOffset: { x: 0, y: 0 },
+    };
+  }
+
+  const clearedFishFrame: PetFrame =
+    frame.fishUntilMs !== null && input.nowMs >= frame.fishUntilMs
+      ? {
+          ...baseFrame,
+          fishUntilMs: null,
+          fishCatchAtMs: null,
+          visualAction: "none",
+        }
+      : baseFrame;
+
+  if (input.nowMs - input.lastInteractionAtMs >= input.activityConfig.sleepAfterMs) {
+    return {
+      ...clearedFishFrame,
       state: "sleep",
       visualAction: "none",
       eyeOffset: { x: 0, y: 0 },
@@ -186,13 +218,15 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       exploreTargetId: null,
       exploreActionUntilMs: null,
       petHeadUntilMs: null,
+      fishUntilMs: null,
+      fishCatchAtMs: null,
     };
   }
 
   if (input.frame.exploreActionUntilMs !== null && input.nowMs < input.frame.exploreActionUntilMs) {
     const exploreObject = findDesktopObjectById(frame.exploreTargetId, input.desktopObjects);
     return {
-      ...baseFrame,
+      ...clearedFishFrame,
       state: "idle",
       visualAction: chooseVisualAction(exploreObject, input.randomValue),
       eyeOffset: { x: 0, y: 0 },
@@ -200,11 +234,13 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       toyIntensity: "none",
       walkTarget: null,
       petHeadUntilMs: null,
+      fishUntilMs: null,
+      fishCatchAtMs: null,
     };
   }
 
   const clearedExploreFrame: PetFrame = {
-    ...baseFrame,
+    ...clearedFishFrame,
     exploreActionUntilMs: null,
     exploreTargetId:
       input.frame.exploreActionUntilMs !== null && input.nowMs >= input.frame.exploreActionUntilMs
@@ -270,6 +306,8 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
   let nextState: PetState = workingFrame.state;
   let nextExploreTargetId = workingFrame.exploreTargetId;
   let nextWalkTarget = workingFrame.walkTarget;
+  let nextFishUntilMs = workingFrame.fishUntilMs;
+  let nextFishCatchAtMs = workingFrame.fishCatchAtMs;
 
   if (nearbyVisualAction !== "none") {
     nextState = "idle";
@@ -286,6 +324,10 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
       } else {
         nextState = chooseRandomState(input.randomValue);
       }
+    } else if (input.randomValue < FISH_CHANCE && workingFrame.state !== "walk" && workingFrame.state !== "explore") {
+      nextState = "fish";
+      nextFishUntilMs = input.nowMs + FISH_DURATION_MS;
+      nextFishCatchAtMs = input.nowMs + FISH_DURATION_MS - FISH_CATCH_WINDOW_MS;
     } else {
       nextState = chooseRandomState(input.randomValue);
     }
@@ -309,11 +351,13 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
         walkTarget: null,
       };
   const moving = nextState === "walk" || nextState === "explore";
-  const visualAction = nearbyVisualAction !== "none"
-    ? nearbyVisualAction
-    : moving && input.randomValue < input.activityConfig.hopChance
-      ? "hop"
-      : "none";
+  const visualAction = nextState === "fish"
+    ? "fishing"
+    : nearbyVisualAction !== "none"
+      ? nearbyVisualAction
+      : moving && input.randomValue < input.activityConfig.hopChance
+        ? "hop"
+        : "none";
 
   return {
     ...workingFrame,
@@ -324,6 +368,8 @@ export function nextPetFrame(input: PetFrameInput): PetFrame {
     visualAction,
     nextRandomAtMs,
     petHeadUntilMs: null,
+    fishUntilMs: nextFishUntilMs,
+    fishCatchAtMs: nextFishCatchAtMs,
   };
 }
 
@@ -337,6 +383,8 @@ export function createPerformFrame(frame: PetFrame, nowMs: number, visualAction:
     exploreTargetId: null,
     exploreActionUntilMs: null,
     petHeadUntilMs: null,
+    fishUntilMs: null,
+    fishCatchAtMs: null,
     toyPoint: null,
     toyIntensity: "none",
     eyeOffset: { x: 0, y: 0 },
@@ -353,6 +401,8 @@ export function createPetHeadFrame(frame: PetFrame, nowMs: number): PetFrame {
     walkTarget: null,
     exploreTargetId: null,
     exploreActionUntilMs: null,
+    fishUntilMs: null,
+    fishCatchAtMs: null,
     toyPoint: null,
     toyIntensity: "none",
     eyeOffset: { x: 0, y: -2 },
@@ -472,4 +522,4 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-export { STRETCH_AFTER_MS, PET_HEAD_DURATION_MS, PERFORM_DURATION_MS };
+export { STRETCH_AFTER_MS, PET_HEAD_DURATION_MS, PERFORM_DURATION_MS, FISH_DURATION_MS, FISH_CATCH_WINDOW_MS };

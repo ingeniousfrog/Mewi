@@ -173,3 +173,63 @@ export function playDrumBeat(): void {
   oscillator.start(now);
   oscillator.stop(now + 0.14);
 }
+
+export function playFishSplash(): void {
+  if (muted) {
+    return;
+  }
+
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
+  }
+
+  const now = context.currentTime;
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.045, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+  gain.connect(context.destination);
+
+  const noise = context.createOscillator();
+  const filter = context.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(420, now);
+  filter.Q.setValueAtTime(0.8, now);
+  noise.type = "triangle";
+  noise.frequency.setValueAtTime(180, now);
+  noise.frequency.exponentialRampToValueAtTime(90, now + 0.2);
+  noise.connect(filter);
+  filter.connect(gain);
+  noise.start(now);
+  noise.stop(now + 0.22);
+}
+
+export function playFishCatch(): void {
+  if (muted) {
+    return;
+  }
+
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
+  }
+
+  const now = context.currentTime;
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.06, now + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+  gain.connect(context.destination);
+
+  const oscillator = context.createOscillator();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(520, now);
+  oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+  oscillator.frequency.exponentialRampToValueAtTime(660, now + 0.36);
+  oscillator.connect(gain);
+  oscillator.start(now);
+  oscillator.stop(now + 0.42);
+}

@@ -7,7 +7,7 @@ import {
   storeActivityLevel,
   type ActivityLevel,
 } from "./activity";
-import { isMuted, playDrumBeat, playHappyMeow, playPurr, playTypeTap, setMuted } from "./audio";
+import { isMuted, playDrumBeat, playFishCatch, playFishSplash, playHappyMeow, playPurr, playTypeTap, setMuted } from "./audio";
 import { isCursorOverPet, toWindowLocalPoint } from "./hitTest";
 import { isOnboardingComplete, type PermissionStatus } from "./onboarding";
 import { ONBOARDING_WINDOW_SIZE, PET_WINDOW_SIZE, WALK_SPEED } from "./constants";
@@ -178,6 +178,8 @@ export function usePetController(): PetController {
         exploreTargetId: null,
         exploreActionUntilMs: null,
         petHeadUntilMs: null,
+        fishUntilMs: null,
+        fishCatchAtMs: null,
         velocity: { x: WALK_SPEED, y: 0 },
       });
     },
@@ -212,6 +214,8 @@ export function usePetController(): PetController {
         exploreTargetId: null,
         exploreActionUntilMs: null,
         petHeadUntilMs: null,
+        fishUntilMs: null,
+        fishCatchAtMs: null,
       };
 
       await client.setPosition(position);
@@ -237,6 +241,8 @@ export function usePetController(): PetController {
       exploreTargetId: null,
       exploreActionUntilMs: null,
       petHeadUntilMs: null,
+      fishUntilMs: null,
+      fishCatchAtMs: null,
       nextRandomAtMs: Date.now() + 3000,
     });
   }, [markInteraction, setFrameValue]);
@@ -531,6 +537,17 @@ export function usePetController(): PetController {
 
         if (nextFrame.state === "petHead" && previousFrame.state !== "petHead") {
           playPurr();
+        }
+
+        if (nextFrame.state === "fish" && previousFrame.state !== "fish") {
+          playFishSplash();
+        }
+
+        if (
+          nextFrame.visualAction === "fish-catch" &&
+          previousFrame.visualAction !== "fish-catch"
+        ) {
+          playFishCatch();
         }
 
         if (

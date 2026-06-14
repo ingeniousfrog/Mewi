@@ -1,4 +1,15 @@
-export type PetState = "idle" | "walk" | "run" | "sleep" | "stretch" | "look" | "drag" | "petHead" | "explore" | "perform";
+export type PetState =
+  | "idle"
+  | "walk"
+  | "run"
+  | "sleep"
+  | "stretch"
+  | "look"
+  | "drag"
+  | "petHead"
+  | "explore"
+  | "perform"
+  | "fish";
 
 export type CursorMode = "default" | "teaser" | "pet";
 
@@ -27,7 +38,12 @@ export type VisualAction =
   | "hop"
   | "head-rub"
   | "mirror-type"
-  | "mirror-drum";
+  | "mirror-drum"
+  | "folder-dig"
+  | "image-rub"
+  | "terminal-pounce"
+  | "fishing"
+  | "fish-catch";
 
 export type ToyIntensity = "none" | "tease" | "excited";
 
@@ -73,4 +89,6 @@ export type PetFrame = PetMotion &
     exploreActionUntilMs: number | null;
     petHeadUntilMs: number | null;
     performUntilMs: number | null;
+    fishUntilMs: number | null;
+    fishCatchAtMs: number | null;
   }>;
